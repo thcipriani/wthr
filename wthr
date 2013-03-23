@@ -1,0 +1,23 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use 5.10.0;
+
+use Term::ReadKey qw(GetTerminalSize);
+use File::Slurp;
+
+my ($width, $height) = GetTerminalSize();
+
+my @snowflakes = qw(❄ ❅ ❆);
+
+my $count //= grep { /^processor\s+: [0-9]/ } read_file('/proc/cpuinfo');
+
+while (1) {
+   my ($load) = (read_file('/proc/loadavg') =~ m/^([\d.]+)/);
+   my $heaviness = int(($load / $count) * $width);
+   for (0 .. $heaviness) {
+       say ' ' x int(rand($width)) . ($snowflakes[ rand @snowflakes ]);
+   }
+   sleep 1;
+}
