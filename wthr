@@ -4,20 +4,26 @@ use strict;
 use warnings;
 use 5.10.0;
 
+use Time::HiRes qw(sleep);
 use Term::ReadKey qw(GetTerminalSize);
 use File::Slurp;
 
+my @snowflakes = qw(❄ ❅ ❆);
 my ($width, $height) = GetTerminalSize();
 
-my @snowflakes = qw(❄ ❅ ❆);
-
-my $count //= grep { /^processor\s+: [0-9]/ } read_file('/proc/cpuinfo');
+my $cpu_count = grep { /^processor\s+: [0-9]/ } read_file('/proc/cpuinfo');
 
 while (1) {
    my ($load) = (read_file('/proc/loadavg') =~ m/^([\d.]+)/);
-   my $heaviness = int(($load / $count) * $width);
+   my $heaviness = int($load / $cpu_count);
    for (0 .. $heaviness) {
-       say ' ' x int(rand($width)) . ($snowflakes[ rand @snowflakes ]);
+       my $flake = $snowflakes[ rand @snowflakes ];
+       say ' ' x int(rand($width)) . $flake;
    }
-   sleep 1;
+
+   if ($heaviness > 0) {
+       sleep (1 / $heaviness)
+   } else {
+       sleep .75;
+   }
 }
