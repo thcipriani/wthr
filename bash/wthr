@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+if ! command -v bc > /dev/null 2>&1; then
+    printf "%s\n" "You must have the 'bc' package installed to run this program"
+fi
+
+snowflakes=(❄ ❅ ❆)
+width=$(tput cols)
+platform=$(uname -s)
+
+if [ $platform = 'Linux' ]; then
+    cpu_count=$(grep -ic ^processor /proc/cpuinfo);
+elif [ $platform = 'Darwin' ]; then
+    cpu_count=$(sysctl -n hw.ncpu)
+fi
+
+
+while true; do
+    if [ $platform = 'Linux' ]; then
+        load=$(cut -d ' ' -f 1 /proc/loadavg)
+    elif [ $platform = 'Darwin' ]; then
+        load=$(sysctl -n vm.loadavg | cut -d ' ' -f 2)
+    fi
+    heaviness=$(echo "scale=10;$load/$cpu_count" | bc)
+    rand_col=$(( (RANDOM % width) + 1 ))
+    printf "%${rand_col}s\n" "${snowflakes[$(( (RANDOM % ${#snowflakes[*]}) ))]}"
+
+    if [ "$(echo "$heaviness > 1" | bc -l)" -eq 1 ]; then
+        sleep "$(echo "scale=10;1/$heaviness" | bc)"
+    else
+        sleep .75
+    fi
+done
